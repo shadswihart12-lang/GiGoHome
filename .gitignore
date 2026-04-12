@@ -1,0 +1,28 @@
+# UE5 Build artifacts
+Binaries/
+Intermediate/
+DerivedDataCache/
+Build/
+
+# UE5 Saved data
+Saved/
+
+# IDE
+.vs/
+.vscode/
+*.sln
+*.suo
+*.opensdf
+*.sdf
+*.VC.db
+*.VC.opendb
+
+# Content binary files that are too large for git (keep .uasset/.umap)
+# If using Git LFS, track *.uasset and *.umap instead
+
+# OS files
+Thumbs.db
+.DS_Store
+
+# Claude local settings
+.claude/settings.local.json

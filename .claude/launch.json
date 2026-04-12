@@ -1,0 +1,35 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "UE5 Editor (Development)",
+      "runtimeExecutable": "C:/Program Files/Epic Games/UE_5.7/UE_5.7/Engine/Binaries/Win64/UnrealEditor.exe",
+      "runtimeArgs": ["C:/MG/modglad/GIGOHOME/GIGOHOME.uproject"],
+      "port": 0
+    },
+    {
+      "name": "Build - Debug",
+      "runtimeExecutable": "C:/Program Files/Epic Games/UE_5.7/UE_5.7/Engine/Build/BatchFiles/Build.bat",
+      "runtimeArgs": ["GIGOHOME", "Win64", "Debug", "C:/MG/modglad/GIGOHOME/GIGOHOME.uproject", "-waitmutex"],
+      "port": 0
+    },
+    {
+      "name": "Build - DebugGame",
+      "runtimeExecutable": "C:/Program Files/Epic Games/UE_5.7/UE_5.7/Engine/Build/BatchFiles/Build.bat",
+      "runtimeArgs": ["GIGOHOME", "Win64", "DebugGame", "C:/MG/modglad/GIGOHOME/GIGOHOME.uproject", "-waitmutex"],
+      "port": 0
+    },
+    {
+      "name": "Build - Development",
+      "runtimeExecutable": "C:/Program Files/Epic Games/UE_5.7/UE_5.7/Engine/Build/BatchFiles/Build.bat",
+      "runtimeArgs": ["GIGOHOME", "Win64", "Development", "C:/MG/modglad/GIGOHOME/GIGOHOME.uproject", "-waitmutex"],
+      "port": 0
+    },
+    {
+      "name": "Build - Shipping",
+      "runtimeExecutable": "C:/Program Files/Epic Games/UE_5.7/UE_5.7/Engine/Build/BatchFiles/Build.bat",
+      "runtimeArgs": ["GIGOHOME", "Win64", "Shipping", "C:/MG/modglad/GIGOHOME/GIGOHOME.uproject", "-waitmutex"],
+      "port": 0
+    }
+  ]
+}
