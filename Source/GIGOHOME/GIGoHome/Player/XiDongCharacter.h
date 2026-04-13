@@ -14,6 +14,7 @@ class UHealthFeedbackComponent;
 class UInputAction;
 class AShooterWeapon;
 class ATunnelSupplyCache;
+class UNavigationInvokerComponent;
 
 UCLASS(abstract)
 class GIGOHOME_API AXiDongCharacter : public AShooterCharacter
@@ -32,6 +33,10 @@ class GIGOHOME_API AXiDongCharacter : public AShooterCharacter
 	/** Per GDD: Health shown through screen effects and breathing, not a health bar */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components", meta=(AllowPrivateAccess="true"))
 	UHealthFeedbackComponent* HealthFeedbackComponent;
+
+	/** Generates nav mesh tiles around the player so enemies can pathfind nearby */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components", meta=(AllowPrivateAccess="true"))
+	UNavigationInvokerComponent* NavInvoker;
 
 public:
 

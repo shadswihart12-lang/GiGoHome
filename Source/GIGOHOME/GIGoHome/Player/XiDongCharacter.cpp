@@ -6,6 +6,7 @@
 #include "GIGoHome/Player/Components/SquadCommandComponent.h"
 #include "GIGoHome/Player/Components/HealthFeedbackComponent.h"
 #include "GIGoHome/Tunnels/TunnelSupplyCache.h"
+#include "GIGoHome/Campaign/Actors/GICampaignNPC.h"
 #include "GIGoHome/GIGoHomeGameMode.h"
 #include "GIGoHome/GIGoHomeSliceGameMode.h"
 #include "GIGoHome/Campaign/GIMissionGameMode.h"
@@ -15,6 +16,7 @@
 #include "Engine/World.h"
 #include "TimerManager.h"
 #include "Variant_Shooter/Weapons/ShooterWeapon.h"
+#include "NavigationInvokerComponent.h"
 
 AXiDongCharacter::AXiDongCharacter()
 {
@@ -22,6 +24,10 @@ AXiDongCharacter::AXiDongCharacter()
 	BodyDragComponent = CreateDefaultSubobject<UBodyDragComponent>(TEXT("BodyDragComponent"));
 	SquadCommandComponent = CreateDefaultSubobject<USquadCommandComponent>(TEXT("SquadCommandComponent"));
 	HealthFeedbackComponent = CreateDefaultSubobject<UHealthFeedbackComponent>(TEXT("HealthFeedbackComponent"));
+
+	// Generate nav mesh tiles around the player (config has bGenerateNavigationOnlyAroundNavigationInvokers=True)
+	NavInvoker = CreateDefaultSubobject<UNavigationInvokerComponent>(TEXT("NavInvoker"));
+	NavInvoker->SetGenerationRadii(3000.f, 2000.f);
 }
 
 void AXiDongCharacter::BeginPlay()
@@ -250,7 +256,8 @@ void AXiDongCharacter::DoInteract()
 {
 	if (IsDead()) return;
 
-	// Interact with nearby supply cache if present
+	// --- Priority 1: Tunnel supply cache interaction ---
+	// Supply cache takes precedence so grabbing ammo never accidentally triggers NPCs.
 	if (NearbySupplyCache && NearbySupplyCache->HasSupplies())
 	{
 		// Take ammo first
@@ -279,6 +286,23 @@ void AXiDongCharacter::DoInteract()
 				}
 			}
 		}
+		return;
+	}
+
+	// --- Priority 2: Campaign NPC interaction (Missions 4 & 5) ---
+	// Finds the nearest in-range NPC (overlap detection is on the NPC side).
+	// Mission 4: Tyler Greg in the drainage ditch — spare or already killed.
+	// Mission 5: Briggs hooded and bound — securing him starts the escort chain.
+	for (TObjectIterator<AGICampaignNPC> It; It; ++It)
+	{
+		// Validate world, alive state, and player proximity
+		if (It->GetWorld() != GetWorld() || It->IsDead() || !It->IsPlayerInRange())
+		{
+			continue;
+		}
+
+		It->InteractWith(this);
+		break; // One interaction per key press — prevents double-firing
 	}
 }
 

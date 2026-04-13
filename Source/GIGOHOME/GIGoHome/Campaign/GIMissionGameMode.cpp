@@ -336,6 +336,12 @@ void AGIMissionGameMode::StartMissionTimer()
 
 	MissionTimerRemaining = MissionTimerDuration;
 
+	// Show initial value immediately so the player sees 12:00 at mission start
+	if (SlateHUD)
+	{
+		SlateHUD->ShowMissionTimer(MissionTimerRemaining);
+	}
+
 	GetWorldTimerManager().SetTimer(
 		MissionTimerHandle,
 		this,
@@ -348,16 +354,29 @@ void AGIMissionGameMode::StartMissionTimer()
 void AGIMissionGameMode::StopMissionTimer()
 {
 	GetWorldTimerManager().ClearTimer(MissionTimerHandle);
+
+	// Clear the countdown display when the timer stops
+	if (SlateHUD)
+	{
+		SlateHUD->HideMissionTimer();
+	}
 }
 
 void AGIMissionGameMode::TickMissionTimer()
 {
 	MissionTimerRemaining -= 1.0f;
+	MissionTimerRemaining = FMath::Max(0.0f, MissionTimerRemaining);
+
 	OnTimerTick.Broadcast(MissionTimerRemaining);
+
+	// Push updated countdown to HUD every tick
+	if (SlateHUD)
+	{
+		SlateHUD->ShowMissionTimer(MissionTimerRemaining);
+	}
 
 	if (MissionTimerRemaining <= 0.0f)
 	{
-		MissionTimerRemaining = 0.0f;
 		StopMissionTimer();
 		OnMissionTimerExpired();
 	}

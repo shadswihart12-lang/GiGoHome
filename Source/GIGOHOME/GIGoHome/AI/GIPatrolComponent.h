@@ -106,6 +106,12 @@ private:
 	UPROPERTY(EditAnywhere, Category="Patrol")
 	float WaypointPauseDuration = 2.0f;
 
+	/** Minimum seconds between MoveToLocation calls (avoids per-tick spam) */
+	UPROPERTY(EditAnywhere, Category="Patrol")
+	float MoveRequestCooldown = 0.25f;
+
+	float LastMoveRequestTime = -999.0f;
+
 	// Cached owner as character
 	class AGIEnemyCharacter* OwnerEnemy = nullptr;
 
@@ -118,8 +124,9 @@ private:
 	void TickRouting(float DeltaTime);
 
 	bool CanSeePlayer(APawn* Player) const;
-	void MoveToward(const FVector& Target, float Speed, float DeltaTime);
-	void MoveInDirection(const FVector& Direction, float Speed, float DeltaTime);
+	void MoveToward(const FVector& Target, float Speed);
+	void MoveInDirection(const FVector& Direction, float Speed);
+	void StopCurrentMove();
 	void FaceToward(const FVector& Target);
 	void FaceDirection(const FVector& Direction);
 	void TransitionTo(EPatrolState NewState);

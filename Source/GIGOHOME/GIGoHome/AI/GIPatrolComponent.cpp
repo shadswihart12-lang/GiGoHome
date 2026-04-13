@@ -7,6 +7,7 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Engine/World.h"
 #include "DrawDebugHelpers.h"
+#include "AIController.h"
 
 UGIPatrolComponent::UGIPatrolComponent()
 {
@@ -18,8 +19,10 @@ void UGIPatrolComponent::BeginPlay()
 	Super::BeginPlay();
 	OwnerEnemy = Cast<AGIEnemyCharacter>(GetOwner());
 
-	// Note: Rout is checked each tick when OwnerEnemy->IsRouting() returns true
-	// The morale system sets bIsRouting via EvaluateMorale() which we poll
+	if (OwnerEnemy)
+	{
+		OwnerEnemy->GetCharacterMovement()->bOrientRotationToMovement = true;
+	}
 }
 
 void UGIPatrolComponent::SetPatrolWaypoints(const TArray<FVector>& Waypoints)
@@ -114,7 +117,7 @@ void UGIPatrolComponent::TickPatrolling(float DeltaTime)
 		return;
 	}
 
-	MoveToward(Target, PatrolSpeed, DeltaTime);
+	MoveToward(Target, PatrolSpeed);
 }
 
 void UGIPatrolComponent::TickAlerted(float DeltaTime)
@@ -137,7 +140,7 @@ void UGIPatrolComponent::TickAlerted(float DeltaTime)
 		return;
 	}
 
-	MoveToward(LastKnownPlayerLocation, EngageSpeed * 0.7f, DeltaTime);
+	MoveToward(LastKnownPlayerLocation, EngageSpeed * 0.7f);
 }
 
 void UGIPatrolComponent::TickEngaging(float DeltaTime)
@@ -170,13 +173,13 @@ void UGIPatrolComponent::TickEngaging(float DeltaTime)
 	if (Dist > EngageStopDistance)
 	{
 		// Close in while shooting
-		MoveToward(LastKnownPlayerLocation, EngageSpeed, DeltaTime);
+		MoveToward(LastKnownPlayerLocation, EngageSpeed);
 		OwnerEnemy->StartShooting(Player);
 	}
 	else
 	{
 		// In range — stand and shoot
-		OwnerEnemy->GetCharacterMovement()->Velocity = FVector::ZeroVector;
+		StopCurrentMove();
 		OwnerEnemy->StartShooting(Player);
 	}
 }
@@ -196,7 +199,7 @@ void UGIPatrolComponent::TickSearching(float DeltaTime)
 	const float Dist = FVector::Dist(OwnerEnemy->GetActorLocation(), LastKnownPlayerLocation);
 	if (Dist > WaypointAcceptRadius)
 	{
-		MoveToward(LastKnownPlayerLocation, PatrolSpeed * 1.3f, DeltaTime);
+		MoveToward(LastKnownPlayerLocation, PatrolSpeed * 1.3f);
 	}
 
 	SearchTimer -= DeltaTime;
@@ -221,8 +224,7 @@ void UGIPatrolComponent::TickRouting(float DeltaTime)
 	}
 
 	// Keep running in the flee direction
-	MoveInDirection(RoutFleeDirection, RoutSpeed, DeltaTime);
-	FaceDirection(RoutFleeDirection);
+	MoveInDirection(RoutFleeDirection, RoutSpeed);
 }
 
 bool UGIPatrolComponent::CanSeePlayer(APawn* Player) const
@@ -260,27 +262,46 @@ bool UGIPatrolComponent::CanSeePlayer(APawn* Player) const
 	return !bBlocked;
 }
 
-void UGIPatrolComponent::MoveToward(const FVector& Target, float Speed, float DeltaTime)
+void UGIPatrolComponent::MoveToward(const FVector& Target, float Speed)
 {
 	if (!OwnerEnemy) return;
 
-	const FVector MyLoc = OwnerEnemy->GetActorLocation();
-	FVector Dir = (Target - MyLoc).GetSafeNormal2D(); // Use 2D to avoid flying up/down
-	
-	// Use AddMovementInput for proper physics-based movement with gravity
-	OwnerEnemy->AddMovementInput(Dir, 1.0f);
 	OwnerEnemy->GetCharacterMovement()->MaxWalkSpeed = Speed;
-
 	FaceToward(Target);
+
+	AAIController* AIC = Cast<AAIController>(OwnerEnemy->GetController());
+	if (!AIC) return;
+
+	const float Now = GetWorld()->GetTimeSeconds();
+	if (Now - LastMoveRequestTime < MoveRequestCooldown) return;
+	LastMoveRequestTime = Now;
+
+	AIC->MoveToLocation(Target, WaypointAcceptRadius, true, true, false, true);
 }
 
-void UGIPatrolComponent::MoveInDirection(const FVector& Direction, float Speed, float DeltaTime)
+void UGIPatrolComponent::MoveInDirection(const FVector& Direction, float Speed)
+{
+	if (!OwnerEnemy || Direction.IsNearlyZero()) return;
+
+	OwnerEnemy->GetCharacterMovement()->MaxWalkSpeed = Speed;
+	FaceDirection(Direction);
+
+	AAIController* AIC = Cast<AAIController>(OwnerEnemy->GetController());
+	if (!AIC) return;
+
+	const float Now = GetWorld()->GetTimeSeconds();
+	if (Now - LastMoveRequestTime < MoveRequestCooldown) return;
+	LastMoveRequestTime = Now;
+
+	const FVector FleeDestination = OwnerEnemy->GetActorLocation() + Direction.GetSafeNormal2D() * 2000.0f;
+	AIC->MoveToLocation(FleeDestination, WaypointAcceptRadius, true, true, false, true);
+}
+
+void UGIPatrolComponent::StopCurrentMove()
 {
 	if (!OwnerEnemy) return;
-
-	FVector Dir2D = Direction.GetSafeNormal2D();
-	OwnerEnemy->AddMovementInput(Dir2D, 1.0f);
-	OwnerEnemy->GetCharacterMovement()->MaxWalkSpeed = Speed;
+	AAIController* AIC = Cast<AAIController>(OwnerEnemy->GetController());
+	if (AIC) AIC->StopMovement();
 }
 
 void UGIPatrolComponent::FaceToward(const FVector& Target)

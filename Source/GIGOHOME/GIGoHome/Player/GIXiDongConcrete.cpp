@@ -64,14 +64,7 @@ AGIXiDongConcrete::AGIXiDongConcrete()
 		GetFirstPersonMesh()->SetSkeletalMesh(ArmsMeshFinder.Object);
 	}
 
-	static ConstructorHelpers::FClassFinder<UAnimInstance> MannyAnimBP(
-		TEXT("/Game/UltraComponents/DemoScene/ThirdPerson/Characters/Mannequins/Animations/ABP_Manny")
-	);
-	if (MannyAnimBP.Succeeded())
-	{
-		GetMesh()->SetAnimInstanceClass(MannyAnimBP.Class);
-		GetFirstPersonMesh()->SetAnimInstanceClass(MannyAnimBP.Class);
-	}
+	// ABP_Manny not present in this project — BeginPlay sets anim class with graceful fallback
 
 	// --- Create Input Actions in C++ ---
 	// Base character actions (AGIGOHOMECharacter)

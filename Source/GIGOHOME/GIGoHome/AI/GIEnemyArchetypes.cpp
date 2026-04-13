@@ -30,9 +30,9 @@ AGIEnemyGreen::AGIEnemyGreen()
 
 	GetCharacterMovement()->MaxWalkSpeed = 250.0f;
 
-	// Load default skeletal mesh (Manny)
+	// Load default skeletal mesh
 	static ConstructorHelpers::FObjectFinder<USkeletalMesh> MeshFinder(
-		TEXT("/Game/Characters/Mannequins/Meshes/SKM_Manny.SKM_Manny")
+		TEXT("/Game/Characters/Mannequins/Meshes/SKM_Manny_Simple.SKM_Manny_Simple")
 	);
 	if (MeshFinder.Succeeded())
 	{
@@ -61,9 +61,9 @@ AGIEnemyVeteran::AGIEnemyVeteran()
 
 	GetCharacterMovement()->MaxWalkSpeed = 320.0f;
 
-	// Load default skeletal mesh (Manny)
+	// Load default skeletal mesh
 	static ConstructorHelpers::FObjectFinder<USkeletalMesh> MeshFinder(
-		TEXT("/Game/Characters/Mannequins/Meshes/SKM_Manny.SKM_Manny")
+		TEXT("/Game/Characters/Mannequins/Meshes/SKM_Manny_Simple.SKM_Manny_Simple")
 	);
 	if (MeshFinder.Succeeded())
 	{
@@ -96,9 +96,9 @@ AGIEnemyBroken::AGIEnemyBroken()
 
 	GetCharacterMovement()->MaxWalkSpeed = 380.0f;
 
-	// Load default skeletal mesh (Manny)
+	// Load default skeletal mesh
 	static ConstructorHelpers::FObjectFinder<USkeletalMesh> MeshFinder(
-		TEXT("/Game/Characters/Mannequins/Meshes/SKM_Manny.SKM_Manny")
+		TEXT("/Game/Characters/Mannequins/Meshes/SKM_Manny_Simple.SKM_Manny_Simple")
 	);
 	if (MeshFinder.Succeeded())
 	{
@@ -135,9 +135,9 @@ AGIEnemyOfficer::AGIEnemyOfficer()
 	// Officers have radio
 	bHasRadio = true;
 
-	// Load default skeletal mesh (Manny)
+	// Load default skeletal mesh
 	static ConstructorHelpers::FObjectFinder<USkeletalMesh> MeshFinder(
-		TEXT("/Game/Characters/Mannequins/Meshes/SKM_Manny.SKM_Manny")
+		TEXT("/Game/Characters/Mannequins/Meshes/SKM_Manny_Simple.SKM_Manny_Simple")
 	);
 	if (MeshFinder.Succeeded())
 	{

@@ -31,19 +31,24 @@ void AGIGoHomeSliceGameMode::BeginPlay()
 		SetupDefaultObjectives();
 	}
 
-	// Create pure Slate HUD (no Blueprint required)
-	CreateSlateHUD();
-
 	// Ensure WaveManager exists (auto-spawn if missing)
 	EnsureWaveManager();
 
-	// Initial wave notification (internal tracking only)
+	// Initial wave notification
 	OnWaveChanged.Broadcast(1, TotalWaves);
+
+	// Publisher demo session cap
+	StartDemoTimer();
+
+	// Defer HUD one tick — AddViewportWidgetForPlayer requires a local player
+	// which isn't set up yet at BeginPlay time in PIE
+	GetWorldTimerManager().SetTimerForNextTick(this, &AGIGoHomeSliceGameMode::CreateSlateHUD);
 }
 
 void AGIGoHomeSliceGameMode::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
-	// Clean up Slate HUD
+	GetWorldTimerManager().ClearTimer(DemoSessionTimerHandle);
+
 	if (SlateHUD)
 	{
 		SlateHUD->DestroyHUD();
@@ -180,6 +185,11 @@ void AGIGoHomeSliceGameMode::NotifyWaveStarted(int32 WaveIndex)
 {
 	CurrentWave = WaveIndex + 1;
 	OnWaveChanged.Broadcast(CurrentWave, TotalWaves);
+
+	if (SlateHUD)
+	{
+		SlateHUD->ShowWaveNotification(CurrentWave, TotalWaves);
+	}
 }
 
 void AGIGoHomeSliceGameMode::NotifyAllWavesCleared()
@@ -263,5 +273,34 @@ void AGIGoHomeSliceGameMode::CheckMissionComplete()
 
 		OnMissionComplete.Broadcast();
 		CompleteMission();
+	}
+}
+
+void AGIGoHomeSliceGameMode::StartDemoTimer()
+{
+	if (DemoSessionTimeLimitSeconds <= 0.0f) return;
+
+	GetWorldTimerManager().SetTimer(
+		DemoSessionTimerHandle,
+		this,
+		&AGIGoHomeSliceGameMode::OnDemoTimerExpired,
+		DemoSessionTimeLimitSeconds,
+		false
+	);
+}
+
+void AGIGoHomeSliceGameMode::OnDemoTimerExpired()
+{
+	// Cap reached — show victory screen so publisher sees the full flow
+	if (!bMissionComplete)
+	{
+		bMissionComplete = true;
+
+		if (SlateHUD)
+		{
+			SlateHUD->ShowVictoryScreen();
+		}
+
+		OnMissionComplete.Broadcast();
 	}
 }

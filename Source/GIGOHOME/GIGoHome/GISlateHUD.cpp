@@ -43,6 +43,74 @@ void SGISlateHUD::Construct(const FArguments& InArgs)
 	[
 		SNew(SOverlay)
 
+		// ========== CROSSHAIR ==========
+		+ SOverlay::Slot()
+		.HAlign(HAlign_Center)
+		.VAlign(VAlign_Center)
+		[
+			SNew(SBox)
+			.WidthOverride(20.0f)
+			.HeightOverride(20.0f)
+			[
+				SNew(SOverlay)
+				// Horizontal bar
+				+ SOverlay::Slot()
+				.HAlign(HAlign_Fill)
+				.VAlign(VAlign_Center)
+				[
+					SNew(SBorder)
+					.BorderBackgroundColor(FLinearColor(1.0f, 1.0f, 1.0f, 0.8f))
+					.Padding(FMargin(0.0f, 1.0f))
+				]
+				// Vertical bar
+				+ SOverlay::Slot()
+				.HAlign(HAlign_Center)
+				.VAlign(VAlign_Fill)
+				[
+					SNew(SBorder)
+					.BorderBackgroundColor(FLinearColor(1.0f, 1.0f, 1.0f, 0.8f))
+					.Padding(FMargin(1.0f, 0.0f))
+				]
+			]
+		]
+
+		// ========== WAVE NOTIFICATION ==========
+		+ SOverlay::Slot()
+		.HAlign(HAlign_Center)
+		.VAlign(VAlign_Top)
+		.Padding(0, 80, 0, 0)
+		[
+			SAssignNew(WaveContainer, SBorder)
+			.BorderBackgroundColor(FLinearColor(0.0f, 0.0f, 0.0f, 0.75f))
+			.Padding(FMargin(40, 16))
+			.Visibility(EVisibility::Collapsed)
+			[
+				SAssignNew(WaveText, STextBlock)
+				.Font(FCoreStyle::GetDefaultFontStyle("Bold", 28))
+				.ColorAndOpacity(FLinearColor(0.85f, 0.75f, 0.3f, 1.0f))
+				.Text(FText::FromString(TEXT("WAVE 1 / 5")))
+			]
+		]
+
+		// ========== MISSION TIMER (Mission 3: 12-minute hold) ==========
+		+ SOverlay::Slot()
+		.HAlign(HAlign_Center)
+		.VAlign(VAlign_Top)
+		.Padding(0, 30, 0, 0)
+		[
+			SAssignNew(TimerContainer, SBorder)
+			.BorderBackgroundColor(FLinearColor(0.0f, 0.0f, 0.0f, 0.75f))
+			.Padding(FMargin(40.0f, 14.0f))
+			.Visibility(EVisibility::Collapsed)
+			[
+				SAssignNew(TimerText, STextBlock)
+				.Font(FCoreStyle::GetDefaultFontStyle("Bold", 38))
+				.ColorAndOpacity(FLinearColor(0.85f, 0.75f, 0.3f, 1.0f))  // AccentGold — matches wave notif
+				.Text(FText::FromString(TEXT("12:00")))
+				.Justification(ETextJustify::Center)
+			]
+		]
+
 		// ========== AMMO CHECK DISPLAY ==========
 		+ SOverlay::Slot()
 		.HAlign(HAlign_Center)
@@ -187,8 +255,26 @@ void SGISlateHUD::ShowAmmoCheck(int32 CurrentAmmo, int32 MagazineSize)
 {
 	if (!AmmoContainer.IsValid() || !AmmoText.IsValid()) return;
 
- AmmoText->SetText(FText::FromString(FString::Printf(TEXT("%d / %d"), CurrentAmmo, MagazineSize)));
+	AmmoText->SetText(FText::FromString(FString::Printf(TEXT("%d / %d"), CurrentAmmo, MagazineSize)));
 	AmmoContainer->SetVisibility(EVisibility::Visible);
+
+	// Auto-hide after 3 seconds
+	if (WorldContext.IsValid())
+	{
+		TWeakPtr<SGISlateHUD> WeakSelf = StaticCastSharedRef<SGISlateHUD>(AsShared());
+		WorldContext->GetTimerManager().SetTimer(
+			AmmoHideTimer,
+			FTimerDelegate::CreateLambda([WeakSelf]()
+			{
+				if (TSharedPtr<SGISlateHUD> Self = WeakSelf.Pin())
+				{
+					Self->HideAmmoDisplay();
+				}
+			}),
+			3.0f,
+			false
+		);
+	}
 }
 
 void SGISlateHUD::HideAmmoDisplay()
@@ -196,6 +282,68 @@ void SGISlateHUD::HideAmmoDisplay()
 	if (AmmoContainer.IsValid())
 	{
 		AmmoContainer->SetVisibility(EVisibility::Collapsed);
+	}
+}
+
+void SGISlateHUD::ShowWaveNotification(int32 Wave, int32 Total)
+{
+	if (!WaveContainer.IsValid() || !WaveText.IsValid()) return;
+
+	WaveText->SetText(FText::FromString(FString::Printf(TEXT("WAVE  %d / %d"), Wave, Total)));
+	WaveContainer->SetVisibility(EVisibility::Visible);
+
+	// Auto-hide after 4 seconds
+	if (WorldContext.IsValid())
+	{
+		TWeakPtr<SGISlateHUD> WeakSelf = StaticCastSharedRef<SGISlateHUD>(AsShared());
+		WorldContext->GetTimerManager().SetTimer(
+			WaveHideTimer,
+			FTimerDelegate::CreateLambda([WeakSelf]()
+			{
+				if (TSharedPtr<SGISlateHUD> Self = WeakSelf.Pin())
+				{
+					Self->HideWaveNotification();
+				}
+			}),
+			4.0f,
+			false
+		);
+	}
+}
+
+void SGISlateHUD::HideWaveNotification()
+{
+	if (WaveContainer.IsValid())
+	{
+		WaveContainer->SetVisibility(EVisibility::Collapsed);
+	}
+}
+
+void SGISlateHUD::ShowMissionTimer(float Seconds)
+{
+	if (!TimerContainer.IsValid() || !TimerText.IsValid()) return;
+
+	// Format as MM:SS countdown
+	const int32 TotalSeconds = FMath::Max(0, FMath::FloorToInt(Seconds));
+	const int32 Minutes      = TotalSeconds / 60;
+	const int32 SecsLeft     = TotalSeconds % 60;
+
+	// Pulse red in the final 60 seconds — gives the player a pressure signal without breaking the minimal HUD aesthetic
+	const FLinearColor TimerColor = (TotalSeconds <= 60)
+		? FLinearColor(0.9f, 0.15f, 0.1f, 1.0f)   // AccentRed — last minute
+		: FLinearColor(0.85f, 0.75f, 0.3f, 1.0f);  // AccentGold — normal
+
+	TimerText->SetText(FText::FromString(
+		FString::Printf(TEXT("%02d:%02d"), Minutes, SecsLeft)));
+	TimerText->SetColorAndOpacity(FSlateColor(TimerColor));
+	TimerContainer->SetVisibility(EVisibility::Visible);
+}
+
+void SGISlateHUD::HideMissionTimer()
+{
+	if (TimerContainer.IsValid())
+	{
+		TimerContainer->SetVisibility(EVisibility::Collapsed);
 	}
 }
 
@@ -246,14 +394,17 @@ void SGISlateHUD::ShowVictoryScreen()
 
 void SGISlateHUD::HideAll()
 {
-	if (AmmoContainer.IsValid()) AmmoContainer->SetVisibility(EVisibility::Collapsed);
-	if (DeathContainer.IsValid()) DeathContainer->SetVisibility(EVisibility::Collapsed);
+	if (AmmoContainer.IsValid())    AmmoContainer->SetVisibility(EVisibility::Collapsed);
+	if (WaveContainer.IsValid())    WaveContainer->SetVisibility(EVisibility::Collapsed);
+	if (TimerContainer.IsValid())   TimerContainer->SetVisibility(EVisibility::Collapsed);
+	if (DeathContainer.IsValid())   DeathContainer->SetVisibility(EVisibility::Collapsed);
 	if (VictoryContainer.IsValid()) VictoryContainer->SetVisibility(EVisibility::Collapsed);
 
-	// Clear timer
+	// Clear timers
 	if (WorldContext.IsValid())
 	{
 		WorldContext->GetTimerManager().ClearTimer(AmmoHideTimer);
+		WorldContext->GetTimerManager().ClearTimer(WaveHideTimer);
 	}
 }
 
@@ -329,6 +480,30 @@ void UGISlateHUDManager::ShowAmmoCheck(int32 CurrentAmmo, int32 MagazineSize)
 	if (SlateHUD.IsValid())
 	{
 		SlateHUD->ShowAmmoCheck(CurrentAmmo, MagazineSize);
+	}
+}
+
+void UGISlateHUDManager::ShowWaveNotification(int32 Wave, int32 Total)
+{
+	if (SlateHUD.IsValid())
+	{
+		SlateHUD->ShowWaveNotification(Wave, Total);
+	}
+}
+
+void UGISlateHUDManager::ShowMissionTimer(float Seconds)
+{
+	if (SlateHUD.IsValid())
+	{
+		SlateHUD->ShowMissionTimer(Seconds);
+	}
+}
+
+void UGISlateHUDManager::HideMissionTimer()
+{
+	if (SlateHUD.IsValid())
+	{
+		SlateHUD->HideMissionTimer();
 	}
 }
 

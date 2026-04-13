@@ -30,6 +30,15 @@ public:
 	/** Show ammo check display briefly */
 	void ShowAmmoCheck(int32 CurrentAmmo, int32 MagazineSize);
 
+	/** Show wave notification briefly (e.g. "WAVE 2 / 5") */
+	void ShowWaveNotification(int32 Wave, int32 Total);
+
+	/** Show mission countdown timer (Mission 3: 12-minute hold) */
+	void ShowMissionTimer(float Seconds);
+
+	/** Hide the mission countdown timer */
+	void HideMissionTimer();
+
 	/** Show death screen with retry/quit options */
 	void ShowDeathScreen();
 
@@ -43,9 +52,20 @@ public:
 	void SetWorld(UWorld* InWorld) { WorldContext = InWorld; }
 
 private:
+	// Crosshair
+	TSharedPtr<SWidget> CrosshairWidget;
+
 	// Ammo Display
 	TSharedPtr<SBorder> AmmoContainer;
 	TSharedPtr<STextBlock> AmmoText;
+
+	// Wave Notification
+	TSharedPtr<SBorder> WaveContainer;
+	TSharedPtr<STextBlock> WaveText;
+
+	// Mission Timer (Mission 3: 12-minute hold countdown)
+	TSharedPtr<SBorder> TimerContainer;
+	TSharedPtr<STextBlock> TimerText;
 
 	// Death Screen
 	TSharedPtr<SBorder> DeathContainer;
@@ -62,10 +82,14 @@ private:
 	// Timer for hiding ammo
 	FTimerHandle AmmoHideTimer;
 
+	// Timer for hiding wave notification
+	FTimerHandle WaveHideTimer;
+
 	// World context for timers
 	TWeakObjectPtr<UWorld> WorldContext;
 
 	void HideAmmoDisplay();
+	void HideWaveNotification();
 
 	FReply OnRetryClicked();
 	FReply OnQuitClicked();
@@ -90,6 +114,15 @@ public:
 
 	/** Show ammo check */
 	void ShowAmmoCheck(int32 CurrentAmmo, int32 MagazineSize);
+
+	/** Show wave notification */
+	void ShowWaveNotification(int32 Wave, int32 Total);
+
+	/** Show mission countdown timer */
+	void ShowMissionTimer(float Seconds);
+
+	/** Hide mission countdown timer */
+	void HideMissionTimer();
 
 	/** Show death screen */
 	void ShowDeathScreen();

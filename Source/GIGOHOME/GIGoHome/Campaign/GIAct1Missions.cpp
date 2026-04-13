@@ -18,7 +18,7 @@ namespace GIAct1MissionHelpers
 		return World ? UGameplayStatics::GetPlayerPawn(World, 0) : nullptr;
 	}
 
-   static bool IsPlayerNearActor(UWorld* World, const AActor* Target, float Distance)
+	static bool IsPlayerNearActor(UWorld* World, const AActor* Target, float Distance)
 	{
 		const APawn* PlayerPawn = GetPlayerPawn(World);
 		if (!PlayerPawn || !Target)
@@ -68,7 +68,7 @@ void AGIAct1Mission1GameMode::SetupMission()
 
 void AGIAct1Mission1GameMode::OnMissionBegin()
 {
-    RadioOperator = ResolveMissionNPC(RadioOperatorTag);
+	RadioOperator = ResolveMissionNPC(RadioOperatorTag);
 	MissionRadio = Cast<AGIRadioActor>(FindWorldActorByTag(RadioActorTag, AGIRadioActor::StaticClass()));
 
 	if (RadioOperator)
@@ -83,7 +83,7 @@ void AGIAct1Mission1GameMode::OnMissionBegin()
 	else
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Mission1: Radio actor with tag '%s' not found."), *RadioActorTag.ToString());
-       CompleteObjective(FName("M1_DestroyRadio"));
+		CompleteObjective(FName("M1_DestroyRadio"));
 	}
 
 	if (!RadioOperator)
@@ -107,7 +107,7 @@ void AGIAct1Mission1GameMode::OnMissionBegin()
 		}
 	}
 
-    GetWorldTimerManager().SetTimer(ExtractionCheckTimer, this, &AGIAct1Mission1GameMode::CheckExtraction, 0.25f, true);
+	GetWorldTimerManager().SetTimer(ExtractionCheckTimer, this, &AGIAct1Mission1GameMode::CheckExtraction, 0.25f, true);
 }
 
 void AGIAct1Mission1GameMode::OnMissionEnd(bool bSuccess)
@@ -132,14 +132,14 @@ void AGIAct1Mission1GameMode::OnRadioOperatorKilled(AGICampaignNPC* DeadNPC)
 
 void AGIAct1Mission1GameMode::CheckExtraction()
 {
- const FGIMissionObjective* NeutralizeObj = FindObjective(FName("M1_NeutralizeOperator"));
+	const FGIMissionObjective* NeutralizeObj = FindObjective(FName("M1_NeutralizeOperator"));
 	const FGIMissionObjective* DestroyObj = FindObjective(FName("M1_DestroyRadio"));
 	if (!NeutralizeObj || !DestroyObj || !NeutralizeObj->bCompleted || !DestroyObj->bCompleted)
 	{
 		return;
 	}
 
-   if (GIAct1MissionHelpers::IsPlayerNearActor(GetWorld(), FindWorldActorByTag(ExtractionTag), ExtractionDistance))
+	if (GIAct1MissionHelpers::IsPlayerNearActor(GetWorld(), FindWorldActorByTag(ExtractionTag), ExtractionDistance))
 	{
 		CompleteObjective(FName("M1_Extract"));
 	}
@@ -188,6 +188,10 @@ void AGIAct1Mission2GameMode::OnMissionBegin()
 {
 	TArray<AActor*> ObservationActors;
 	UGameplayStatics::GetAllActorsOfClass(GetWorld(), AGIObservationPoint::StaticClass(), ObservationActors);
+	ObservationActors.Sort([](const AActor& A, const AActor& B)
+	{
+		return A.GetPathName() < B.GetPathName();
+	});
 
 	ObservationPoints.Empty();
 	for (AActor* Actor : ObservationActors)
@@ -239,7 +243,7 @@ void AGIAct1Mission2GameMode::OnObservationPointComplete(AGIObservationPoint* Po
 	bool bAllObserved = true;
 	for (int32 Index = 1; Index <= 3; ++Index)
 	{
-       const FGIMissionObjective* ObserveObj = FindObjective(FName(*FString::Printf(TEXT("M2_Observe%d"), Index)));
+		const FGIMissionObjective* ObserveObj = FindObjective(FName(*FString::Printf(TEXT("M2_Observe%d"), Index)));
 		if (!ObserveObj || !ObserveObj->bCompleted)
 		{
 			bAllObserved = false;
@@ -260,13 +264,13 @@ void AGIAct1Mission2GameMode::OnObservationPointComplete(AGIObservationPoint* Po
 
 void AGIAct1Mission2GameMode::CheckExtraction()
 {
-  const FGIMissionObjective* IdentifyObj = FindObjective(FName("M2_IdentifyRadio"));
+	const FGIMissionObjective* IdentifyObj = FindObjective(FName("M2_IdentifyRadio"));
 	if (!IdentifyObj || !IdentifyObj->bCompleted)
 	{
 		return;
 	}
 
-   if (GIAct1MissionHelpers::IsPlayerNearActor(GetWorld(), FindWorldActorByTag(ExtractionTag), ExtractionDistance))
+	if (GIAct1MissionHelpers::IsPlayerNearActor(GetWorld(), FindWorldActorByTag(ExtractionTag), ExtractionDistance))
 	{
 		CompleteObjective(FName("M2_Extract"));
 	}
@@ -313,7 +317,7 @@ void AGIAct1Mission3GameMode::SetupMission()
 
 void AGIAct1Mission3GameMode::OnMissionBegin()
 {
-  PrimaryRadio = Cast<AGIRadioActor>(FindWorldActorByTag(PrimaryRadioTag, AGIRadioActor::StaticClass()));
+	PrimaryRadio = Cast<AGIRadioActor>(FindWorldActorByTag(PrimaryRadioTag, AGIRadioActor::StaticClass()));
 	BackupRadio = Cast<AGIRadioActor>(FindWorldActorByTag(BackupRadioTag, AGIRadioActor::StaticClass()));
 	RunnerNPC = ResolveMissionNPC(RunnerTag);
 
@@ -384,14 +388,14 @@ void AGIAct1Mission3GameMode::OnRunnerKilled(AGICampaignNPC* DeadNPC)
 
 void AGIAct1Mission3GameMode::CheckExtraction()
 {
-    const FGIMissionObjective* SurviveObj = FindObjective(FName("M3_SurviveTimer"));
+	const FGIMissionObjective* SurviveObj = FindObjective(FName("M3_SurviveTimer"));
 	const FGIMissionObjective* BackupObj = FindObjective(FName("M3_StopBackupRadio"));
 	if (!SurviveObj || !BackupObj || !SurviveObj->bCompleted || !BackupObj->bCompleted)
 	{
 		return;
 	}
 
-   if (GIAct1MissionHelpers::IsPlayerNearActor(GetWorld(), FindWorldActorByTag(ExtractionTag), ExtractionDistance))
+	if (GIAct1MissionHelpers::IsPlayerNearActor(GetWorld(), FindWorldActorByTag(ExtractionTag), ExtractionDistance))
 	{
 		CompleteObjective(FName("M3_Extract"));
 	}
@@ -435,7 +439,7 @@ void AGIAct1Mission4GameMode::SetupMission()
 
 void AGIAct1Mission4GameMode::OnMissionBegin()
 {
-    TylerGreg = ResolveMissionNPC(TylerGregTag);
+	TylerGreg = ResolveMissionNPC(TylerGregTag);
 	if (TylerGreg)
 	{
 		TylerGreg->OnNPCKilled.AddDynamic(this, &AGIAct1Mission4GameMode::OnTylerKilled);
@@ -484,7 +488,7 @@ void AGIAct1Mission4GameMode::OnTylerInteracted(AGICampaignNPC* NPC, AActor* Int
 
 void AGIAct1Mission4GameMode::CheckMissionObjectives()
 {
-   if (!bReachedPerimeter && GIAct1MissionHelpers::IsPlayerNearActor(GetWorld(), FindWorldActorByTag(PerimeterTag), ObjectiveDistance))
+	if (!bReachedPerimeter && GIAct1MissionHelpers::IsPlayerNearActor(GetWorld(), FindWorldActorByTag(PerimeterTag), ObjectiveDistance))
 	{
 		bReachedPerimeter = true;
 		CompleteObjective(FName("M4_ReachPerimeter"));
@@ -495,7 +499,7 @@ void AGIAct1Mission4GameMode::CheckMissionObjectives()
 		return;
 	}
 
-    if (GIAct1MissionHelpers::IsPlayerNearActor(GetWorld(), FindWorldActorByTag(ExtractionTag), ObjectiveDistance))
+	if (GIAct1MissionHelpers::IsPlayerNearActor(GetWorld(), FindWorldActorByTag(ExtractionTag), ObjectiveDistance))
 	{
 		CompleteObjective(FName("M4_Extract"));
 	}
@@ -533,7 +537,7 @@ void AGIAct1Mission5GameMode::SetupMission()
 
 void AGIAct1Mission5GameMode::OnMissionBegin()
 {
-  Briggs = ResolveMissionNPC(BriggsTag);
+	Briggs = ResolveMissionNPC(BriggsTag);
 	if (Briggs)
 	{
 		Briggs->OnNPCInteracted.AddDynamic(this, &AGIAct1Mission5GameMode::OnBriggsInteracted);
@@ -572,12 +576,12 @@ void AGIAct1Mission5GameMode::OnBriggsInteracted(AGICampaignNPC* NPC, AActor* In
 	bBriggsSecured = true;
 	CompleteObjective(FName("M5_SecureBriggs"));
 
- const AActor* TunnelExit = FindWorldActorByTag(TunnelExitTag);
+	const AActor* TunnelExit = FindWorldActorByTag(TunnelExitTag);
 	if (BriggsEscort && TunnelExit)
 	{
 		BriggsEscort->StartEscort(Interactor, TunnelExit->GetActorLocation());
 	}
-   else
+	else
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Mission5: Tunnel exit with tag '%s' not found; completing escort objective."), *TunnelExitTag.ToString());
 		CompleteObjective(FName("M5_EscortTunnel"));
@@ -596,7 +600,7 @@ void AGIAct1Mission5GameMode::OnBriggsStumbled()
 
 void AGIAct1Mission5GameMode::CheckMissionObjectives()
 {
- if (!bInfiltrationComplete && GIAct1MissionHelpers::IsPlayerNearActor(GetWorld(), FindWorldActorByTag(KestrelCoreTag), ObjectiveDistance))
+	if (!bInfiltrationComplete && GIAct1MissionHelpers::IsPlayerNearActor(GetWorld(), FindWorldActorByTag(KestrelCoreTag), ObjectiveDistance))
 	{
 		bInfiltrationComplete = true;
 		CompleteObjective(FName("M5_Infiltrate"));

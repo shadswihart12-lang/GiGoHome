@@ -14,6 +14,7 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "GIGoHome/Weapons/WeaponPickup.h"
+#include "NavigationInvokerComponent.h"
 
 AGIEnemyCharacter::AGIEnemyCharacter()
 {
@@ -21,6 +22,10 @@ AGIEnemyCharacter::AGIEnemyCharacter()
 
 	// Create the forced visibility component - this ensures mesh is always visible
 	ForcedVisibilityComponent = CreateDefaultSubobject<UGIForcedVisibilityComponent>(TEXT("ForcedVisibility"));
+
+	// Generate nav mesh tiles around this enemy (config has bGenerateNavigationOnlyAroundNavigationInvokers=True)
+	NavInvoker = CreateDefaultSubobject<UNavigationInvokerComponent>(TEXT("NavInvoker"));
+	NavInvoker->SetGenerationRadii(3000.f, 2000.f);
 
 	// The base class sets OwnerNoSee=true and FirstPersonPrimitiveType=WorldSpaceRepresentation
 	// on GetMesh() for the player's self-hiding logic. Enemies must undo all of this.
@@ -37,7 +42,7 @@ AGIEnemyCharacter::AGIEnemyCharacter()
 	// Ensure enemies walk on the ground and don't fly
 	GetCharacterMovement()->GravityScale = 1.0f;
 	GetCharacterMovement()->MaxWalkSpeed = 300.0f;
-	GetCharacterMovement()->bOrientRotationToMovement = false;
+	GetCharacterMovement()->bOrientRotationToMovement = true;
 	GetCharacterMovement()->SetMovementMode(MOVE_Walking);
 	GetCharacterMovement()->bConstrainToPlane = false;
 }

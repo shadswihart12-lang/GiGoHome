@@ -8,6 +8,7 @@
 
 class AWeaponPickup;
 class UGIForcedVisibilityComponent;
+class UNavigationInvokerComponent;
 
 /**
  * Four enemy archetypes from the GDD
@@ -51,6 +52,10 @@ class GIGOHOME_API AGIEnemyCharacter : public AShooterNPC
 	/** Forces mesh visibility - solves inheritance issue from player character */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components", meta=(AllowPrivateAccess="true"))
 	UGIForcedVisibilityComponent* ForcedVisibilityComponent;
+
+	/** Generates nav mesh tiles around this enemy so NavMesh pathfinding works */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components", meta=(AllowPrivateAccess="true"))
+	UNavigationInvokerComponent* NavInvoker;
 
 public:
 

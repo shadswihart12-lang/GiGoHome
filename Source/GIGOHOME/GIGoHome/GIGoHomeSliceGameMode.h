@@ -115,6 +115,14 @@ protected:
 	/** Whether mission is complete */
 	bool bMissionComplete = false;
 
+	// --- Publisher Demo ---
+
+	/** Cap demo sessions at this many seconds (default 20 min). 0 = disabled. */
+	UPROPERTY(EditAnywhere, Category="Publisher Demo", meta=(ClampMin=0.0f, Units="s"))
+	float DemoSessionTimeLimitSeconds = 1200.0f;
+
+	FTimerHandle DemoSessionTimerHandle;
+
 public:
 
 	AGIGoHomeSliceGameMode();
@@ -171,4 +179,10 @@ protected:
 
 	/** Creates pure Slate HUD */
 	void CreateSlateHUD();
+
+	/** Starts the publisher session cap timer */
+	void StartDemoTimer();
+
+	/** Called when publisher demo timer expires */
+	void OnDemoTimerExpired();
 };
