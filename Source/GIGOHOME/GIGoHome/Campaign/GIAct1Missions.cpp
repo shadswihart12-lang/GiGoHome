@@ -230,7 +230,7 @@ void AGIAct1Mission2GameMode::OnObservationPointComplete(AGIObservationPoint* Po
 	}
 
 	const FName ObjectiveTag = Point->GetPointTag();
-	if (!ObjectiveTag.IsNone() && ObservationPoints.Contains(Point))
+	if (!ObjectiveTag.IsNone() && ObservationPoints.Contains(Point) && FindObjective(ObjectiveTag))
 	{
 		CompleteObjective(ObjectiveTag);
 	}
