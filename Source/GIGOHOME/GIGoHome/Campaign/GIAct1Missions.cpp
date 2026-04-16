@@ -233,10 +233,10 @@ void AGIAct1Mission2GameMode::OnObservationPointComplete(AGIObservationPoint* Po
 		return;
 	}
 
-	const int32 PointIndex = ObservationPoints.IndexOfByKey(Point);
-	if (PointIndex != INDEX_NONE && PointIndex < 3)
+	const FName ObjectiveTag = Point->GetPointTag();
+	if (!ObjectiveTag.IsNone())
 	{
-		CompleteObjective(FName(*FString::Printf(TEXT("M2_Observe%d"), PointIndex + 1)));
+		CompleteObjective(ObjectiveTag);
 	}
 
 	// Once all points are done, radio identification is complete.
