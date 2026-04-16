@@ -7,6 +7,8 @@
 #include "Perception/AIPerceptionComponent.h"
 #include "Navigation/PathFollowingComponent.h"
 #include "AI/Navigation/PathFollowingAgentInterface.h"
+#include "GameFramework/Character.h"
+#include "GameFramework/CharacterMovementComponent.h"
 
 AShooterAIController::AShooterAIController()
 {
@@ -58,11 +60,62 @@ void AShooterAIController::OnPawnDeath()
 void AShooterAIController::SetCurrentTarget(AActor* Target)
 {
 	TargetEnemy = Target;
+
+	if (!Target || !IsValid(Target))
+	{
+		StopChasing();
+	}
 }
 
 void AShooterAIController::ClearCurrentTarget()
 {
 	TargetEnemy = nullptr;
+	StopChasing();
+}
+
+void AShooterAIController::StartChasing(AActor* Target, float AcceptanceRadius)
+{
+	if (!Target || !IsValid(Target)) return;
+
+	TargetEnemy = Target;
+	ChaseAcceptanceRadius = AcceptanceRadius;
+
+	// Short delay before first move — allows nav invoker to generate tiles around the enemy
+	FTimerHandle FirstMoveDelay;
+	GetWorld()->GetTimerManager().SetTimer(
+		FirstMoveDelay,
+		[this]()
+		{
+			if (TargetEnemy && IsValid(TargetEnemy) && GetPawn())
+			{
+				MoveToActor(TargetEnemy, ChaseAcceptanceRadius, true, true, false);
+			}
+		},
+		0.3f, false
+	);
+
+	// Then refresh path every 0.5s to track the moving player
+	GetWorld()->GetTimerManager().SetTimer(
+		ChaseTimer,
+		[this]()
+		{
+			if (TargetEnemy && IsValid(TargetEnemy) && GetPawn())
+			{
+				MoveToActor(TargetEnemy, ChaseAcceptanceRadius, true, true, false);
+			}
+			else
+			{
+				StopChasing();
+			}
+		},
+		0.5f, true
+	);
+}
+
+void AShooterAIController::StopChasing()
+{
+	GetWorld()->GetTimerManager().ClearTimer(ChaseTimer);
+	StopMovement();
 }
 
 void AShooterAIController::OnPerceptionUpdated(AActor* Actor, FAIStimulus Stimulus)

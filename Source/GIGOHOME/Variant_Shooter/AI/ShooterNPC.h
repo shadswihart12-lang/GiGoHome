@@ -90,6 +90,29 @@ protected:
 	/** Deferred destruction on death timer */
 	FTimerHandle DeathTimer;
 
+	/** How close to get before stopping movement */
+	UPROPERTY(EditAnywhere, Category="Hunt")
+	float HuntStopDistance = 250.0f;
+
+	/** How far away to start shooting */
+	UPROPERTY(EditAnywhere, Category="Hunt")
+	float HuntShootRange = 1200.0f;
+
+	/** Hunt movement speed */
+	UPROPERTY(EditAnywhere, Category="Hunt")
+	float HuntSpeed = 350.0f;
+
+	/** Sight range to detect player */
+	UPROPERTY(EditAnywhere, Category="Hunt")
+	float HuntSightRange = 2500.0f;
+
+	/** Shoot interval in seconds */
+	UPROPERTY(EditAnywhere, Category="Hunt")
+	float HuntShootInterval = 0.8f;
+
+	/** Internal shoot timer */
+	float HuntShootTimer = 0.0f;
+
 public:
 
 	/** Delegate called when this NPC dies */

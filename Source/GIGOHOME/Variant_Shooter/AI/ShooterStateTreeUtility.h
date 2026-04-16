@@ -239,6 +239,52 @@ struct FStateTreeShootAtTargetTask : public FStateTreeTaskCommonBase
 ////////////////////////////////////////////////////////////////////
 
 /**
+ *  Instance data struct for the Move To Target StateTree task
+ */
+USTRUCT()
+struct FStateTreeMoveToTargetInstanceData
+{
+	GENERATED_BODY()
+
+	/** AI Controller that will move toward the target */
+	UPROPERTY(EditAnywhere, Category = Context)
+	TObjectPtr<AAIController> Controller;
+
+	/** Target actor to move toward */
+	UPROPERTY(EditAnywhere, Category = Input)
+	TObjectPtr<AActor> Target;
+
+	/** Acceptance radius — stop this far from the target */
+	UPROPERTY(EditAnywhere, Category = Parameter)
+	float AcceptanceRadius = 200.0f;
+
+	/** Movement speed */
+	UPROPERTY(EditAnywhere, Category = Parameter)
+	float MoveSpeed = 300.0f;
+};
+
+/**
+ *  StateTree task to move an NPC toward a target actor via the nav mesh
+ */
+USTRUCT(meta=(DisplayName="Move To Target", Category="Shooter"))
+struct FStateTreeMoveToTargetTask : public FStateTreeTaskCommonBase
+{
+	GENERATED_BODY()
+
+	using FInstanceDataType = FStateTreeMoveToTargetInstanceData;
+	virtual const UStruct* GetInstanceDataType() const override { return FInstanceDataType::StaticStruct(); }
+
+	virtual EStateTreeRunStatus EnterState(FStateTreeExecutionContext& Context, const FStateTreeTransitionResult& Transition) const override;
+	virtual void ExitState(FStateTreeExecutionContext& Context, const FStateTreeTransitionResult& Transition) const override;
+
+#if WITH_EDITOR
+	virtual FText GetDescription(const FGuid& ID, FStateTreeDataView InstanceDataView, const IStateTreeBindingLookup& BindingLookup, EStateTreeNodeFormatting Formatting = EStateTreeNodeFormatting::Text) const override;
+#endif
+};
+
+////////////////////////////////////////////////////////////////////
+
+/**
  *  Instance data struct for the Sense Enemies StateTree task
  */
 USTRUCT()

@@ -133,19 +133,10 @@ void AGIEnemyCharacter::BeginPlay()
 	Super::BeginPlay();
 
 	USkeletalMeshComponent* EnemyMesh = GetMesh();
-	if (EnemyMesh && !EnemyMesh->GetSkeletalMeshAsset())
-	{
-		if (APawn* PlayerPawn = UGameplayStatics::GetPlayerPawn(GetWorld(), 0))
-		{
-			if (ACharacter* PlayerCharacter = Cast<ACharacter>(PlayerPawn))
-			{
-				if (USkeletalMesh* PlayerMeshAsset = PlayerCharacter->GetMesh() ? PlayerCharacter->GetMesh()->GetSkeletalMeshAsset() : nullptr)
-				{
-					EnemyMesh->SetSkeletalMesh(PlayerMeshAsset);
-				}
-			}
-		}
-	}
+
+	// NOTE: Mesh fallback removed — enemies must have their own skeletal mesh assigned
+	// in the level or spawner. Stealing the player mesh caused null pointer crashes in PIE
+	// when enemies BeginPlay before the player character is fully initialized.
 
     if (EnemyMesh && !EnemyMesh->GetAnimInstance())
 	{

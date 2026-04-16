@@ -9,6 +9,7 @@
 #include "Perception/AIPerceptionComponent.h"
 #include "ShooterAIController.h"
 #include "StateTreeAsyncExecutionContext.h"
+#include "GameFramework/CharacterMovementComponent.h"
 
 bool FStateTreeLineOfSightToTargetCondition::TestCondition(FStateTreeExecutionContext& Context) const
 {
@@ -210,6 +211,61 @@ FText FStateTreeShootAtTargetTask::GetDescription(const FGuid& ID, FStateTreeDat
 	return FText::FromString("<b>Shoot at Target</b>");
 }
 #endif // WITH_EDITOR
+
+EStateTreeRunStatus FStateTreeMoveToTargetTask::EnterState(FStateTreeExecutionContext& Context, const FStateTreeTransitionResult& Transition) const
+{
+	if (Transition.ChangeType == EStateTreeStateChangeType::Changed)
+	{
+		FInstanceDataType& InstanceData = Context.GetInstanceData(*this);
+
+		if (!IsValid(InstanceData.Target) || !IsValid(InstanceData.Controller))
+		{
+			return EStateTreeRunStatus::Failed;
+		}
+
+		// Cast to concrete type so MoveToActor routes through PathFollowingComponent correctly
+		AShooterAIController* ShooterAIC = Cast<AShooterAIController>(InstanceData.Controller);
+		if (!ShooterAIC)
+		{
+			return EStateTreeRunStatus::Failed;
+		}
+
+		// Set movement speed on the pawn
+		if (APawn* Pawn = ShooterAIC->GetPawn())
+		{
+			if (ACharacter* Char = Cast<ACharacter>(Pawn))
+			{
+				Char->GetCharacterMovement()->MaxWalkSpeed = InstanceData.MoveSpeed;
+			}
+		}
+
+		// Hand off to the controller's chase system — it owns all movement
+		ShooterAIC->StartChasing(InstanceData.Target, InstanceData.AcceptanceRadius);
+	}
+
+	return EStateTreeRunStatus::Running;
+}
+
+void FStateTreeMoveToTargetTask::ExitState(FStateTreeExecutionContext& Context, const FStateTreeTransitionResult& Transition) const
+{
+	if (Transition.ChangeType == EStateTreeStateChangeType::Changed)
+	{
+		FInstanceDataType& InstanceData = Context.GetInstanceData(*this);
+		if (AShooterAIController* ShooterAIC = Cast<AShooterAIController>(InstanceData.Controller))
+		{
+			ShooterAIC->StopChasing();
+		}
+	}
+}
+
+#if WITH_EDITOR
+FText FStateTreeMoveToTargetTask::GetDescription(const FGuid& ID, FStateTreeDataView InstanceDataView, const IStateTreeBindingLookup& BindingLookup, EStateTreeNodeFormatting Formatting) const
+{
+	return FText::FromString("<b>Move To Target</b>");
+}
+#endif
+
+////////////////////////////////////////////////////////////////////
 
 EStateTreeRunStatus FStateTreeSenseEnemiesTask::EnterState(FStateTreeExecutionContext& Context, const FStateTreeTransitionResult& Transition) const
 {

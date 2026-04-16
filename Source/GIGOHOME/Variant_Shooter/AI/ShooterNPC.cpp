@@ -29,10 +29,12 @@ AShooterNPC::AShooterNPC()
 	GetFirstPersonMesh()->SetHiddenInGame(true);
 	GetFirstPersonMesh()->SetVisibility(false);
 
-	// Ensure NPCs walk on the ground
+	// Ensure NPCs walk on the ground and respond to AI move requests
 	GetCharacterMovement()->GravityScale = 1.0f;
 	GetCharacterMovement()->MaxWalkSpeed = 300.0f;
-	GetCharacterMovement()->bOrientRotationToMovement = false;
+	GetCharacterMovement()->bOrientRotationToMovement = true;
+	GetCharacterMovement()->SetMovementMode(MOVE_Walking);
+	bUseControllerRotationYaw = false;
 }
 
 void AShooterNPC::BeginPlay()

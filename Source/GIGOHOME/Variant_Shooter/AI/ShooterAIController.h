@@ -38,6 +38,12 @@ protected:
 	/** Enemy currently being targeted */
 	TObjectPtr<AActor> TargetEnemy;
 
+	/** Timer for chasing the target */
+	FTimerHandle ChaseTimer;
+
+	/** Acceptance radius used by the chase timer */
+	float ChaseAcceptanceRadius = 200.0f;
+
 public:
 
 	/** Called when an AI perception has been updated. StateTree task delegate hook */
@@ -72,6 +78,12 @@ public:
 
 	/** Returns the targeted enemy */
 	AActor* GetCurrentTarget() const { return TargetEnemy; };
+
+	/** Starts chasing a target via repeating timer — owned by controller, not StateTree */
+	void StartChasing(AActor* Target, float AcceptanceRadius = 200.0f);
+
+	/** Stops the chase timer and movement */
+	void StopChasing();
 
 protected:
 
